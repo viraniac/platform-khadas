@@ -18,7 +18,7 @@ UINITRD_ARCH="arm64"
 DEVICENAME="Khadas VIM1S"
 DEVICE="vim1s"
 # This is useful for multiple devices sharing the same/similar kernel
-DEVICEFAMILY="mp"
+DEVICEFAMILY="khadas"
 DEVICEBASE="vim1s"
 # tarball from DEVICEFAMILY repo to use
 #DEVICEREPO="https://github.com/volumio/platform-${DEVICEFAMILY}.git"
@@ -34,11 +34,11 @@ KIOSKMODE=yes
 
 ## Partition info
 BOOT_START=16
-BOOT_END=80
+BOOT_END=256
 BOOT_TYPE=msdos          # msdos or gpt
 BOOT_USE_UUID=yes        # Add UUID to fstab
 IMAGE_END=3800
-INIT_TYPE="init.nextarm" # init.{x86/nextarm/nextarm_tvbox}
+INIT_TYPE="initv3"
 
 # Modules that will be added to intramsfs
 MODULES=("overlay" "squashfs" "nls_cp437" "fuse")
@@ -114,7 +114,7 @@ device_chroot_tweaks_pre() {
   
   # Do not use i2s for the time being (needs to be checked)
   cat <<-EOF >>/boot/dtb/amlogic/kvim1s.dtb.overlay.env
-fdt_overlays=spdifout uart_c renamesound
+fdt_overlays=spdifout uart_c renamesound panfrost
 EOF
 
   log "Fixing armv8 deprecated instruction emulation, allow dmesg"

@@ -17,15 +17,18 @@ git pull
 cd ..
 
 echo "Backup hwpacks to vim1s folder"
-cp -R ${FENIX}/archives/hwpacks/wlan-firmware $PLATFORM/${DEVICE}/hwpacks
-cp -R ${FENIX}/archives/hwpacks/bluez $PLATFORM/${DEVICE}/hwpacks
+mkdir -p $PLATFORM/${DEVICE}/hwpacks/
+cp -R ${FENIX}/archives/hwpacks/wlan-firmware $PLATFORM/${DEVICE}/hwpacks/
+cp -R ${FENIX}/archives/hwpacks/bluez $PLATFORM/${DEVICE}/hwpacks/
 
 echo "Unpacking boot, lib and dtb from Khadas .deb file..."  
 dpkg-deb -R $PLATFORM/kernelnew/khadas/debs/${DEVICE}/linux-image*.deb /tmp/linux-image
 cp /tmp/linux-image/boot/vmlinuz-* $PLATFORM/${DEVICE}/boot/Image
 cp /tmp/linux-image/boot/config* $PLATFORM/${DEVICE}/boot/
 cp -R /tmp/linux-image/lib/modules $PLATFORM/${DEVICE}/lib/
-cp -R /tmp/linux-image/usr/lib/linux-image*/amlogic/* $PLATFORM/${DEVICE}/boot/dtb/amlogic/
+
+mkdir -p $PLATFORM/${DEVICE}/boot/dtb/amlogic
+cp -R /tmp/linux-image/usr/lib/linux-image*/* $PLATFORM/${DEVICE}/boot/dtb/amlogic
 
 echo "Unpacking pre-copmpiled khadas vim1s device tree overlay modules"
 [ -e $PLATFORM/${DEVICE}/boot/dtb/amlogic/kvim1s.dtb.overlays ] && rm -r $PLATFORM/${DEVICE}/boot/dtb/amlogic/kvim1s.dtb.overlays
@@ -38,7 +41,7 @@ dtc -O dtb -o $PLATFORM/${DEVICE}/boot/dtb/amlogic/kvim1s.dtb.overlays/renamesou
 echo "Unpacking firmware and merge Khadas-specific firmware with it"
 dpkg-deb -R $PLATFORM/kernelnew/khadas/debs/common/armbian-firmware*.deb /tmp/linux-firmware
 cp -R /tmp/linux-firmware/lib/firmware $PLATFORM/${DEVICE}/lib/
-cp -R $PLATFORM/${DEVICE}/hwpacks/wlan-firmware/* $PLATFORM/${DEVICE}/lib/firmware
+cp -R $PLATFORM/${DEVICE}/hwpacks/wlan-firmware/* $PLATFORM/${DEVICE}/lib/firmware/
 
 rm -r /tmp/linux-image
 rm -r /tmp/linux-firmware
