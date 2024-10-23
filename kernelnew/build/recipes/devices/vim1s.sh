@@ -18,7 +18,7 @@ UINITRD_ARCH="arm64"
 DEVICENAME="Khadas VIM1S"
 DEVICE="vim1s"
 # This is useful for multiple devices sharing the same/similar kernel
-DEVICEFAMILY="mp"
+DEVICEFAMILY="khadas"
 DEVICEBASE="vim1s"
 # tarball from DEVICEFAMILY repo to use
 #DEVICEREPO="https://github.com/volumio/platform-${DEVICEFAMILY}.git"
@@ -34,11 +34,11 @@ KIOSKMODE=yes
 
 ## Partition info
 BOOT_START=16
-BOOT_END=80
+BOOT_END=256
 BOOT_TYPE=msdos          # msdos or gpt
 BOOT_USE_UUID=yes        # Add UUID to fstab
 IMAGE_END=3800
-INIT_TYPE="init.nextarm" # init.{x86/nextarm/nextarm_tvbox}
+INIT_TYPE="initv3"
 
 # Modules that will be added to intramsfs
 MODULES=("overlay" "squashfs" "nls_cp437" "fuse")
@@ -53,9 +53,12 @@ write_device_files() {
 
   cp -R "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
   cp -R "${PLTDIR}/${DEVICEBASE}/lib/modules" "${ROOTFSMNT}/lib"
-  cp -R "${PLTDIR}/${DEVICEBASE}/lib/firmware" "${ROOTFSMNT}/lib"
 
+  log "Adding broadcom wlan firmware for vims onboard wlan"
+  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/wlan-firmware/brcm/" "${ROOTFSMNT}/lib/firmware"
 
+  log "Adding Meson video firmware"
+  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/video-firmware/Amlogic/video" "${ROOTFSMNT}/lib/firmware/"
 
   log "Adding Wifi & Bluetooth firmware and helpers NOT COMPLETED, TBS"
   cp "${PLTDIR}/${DEVICEBASE}/hwpacks/bluez/hciattach-armhf" "${ROOTFSMNT}/usr/local/bin/hciattach"
@@ -64,12 +67,11 @@ write_device_files() {
   log "Adding services"
   mkdir -p "${ROOTFSMNT}/lib/systemd/system"
   cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/bluetooth-khadas.service" "${ROOTFSMNT}/lib/systemd/system"
+  cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/fan.service" "${ROOTFSMNT}/lib/systemd/system"
 
   log "Load modules, specific for VIM1S, to /etc/modules" 
   cp "${PLTDIR}/${DEVICEBASE}/etc/modules" "${ROOTFSMNT}/etc"
-
-  log "Add Alsa asound.state" 
-  cp -R "${PLTDIR}/${DEVICEBASE}/var" "${ROOTFSMNT}"
+  cp -R "${PLTDIR}/${DEVICEBASE}/etc/modprobe.d" "${ROOTFSMNT}/etc/"
 
   log "Adding usr/local/bin & usr/bin files"
   cp -R "${PLTDIR}/${DEVICEBASE}/usr" "${ROOTFSMNT}"
@@ -79,6 +81,9 @@ write_device_files() {
 
   log "Copying triggerhappy configuration"
   cp -R "${PLTDIR}/${DEVICEBASE}/etc/triggerhappy" "${ROOTFSMNT}/etc"
+
+  log "Copying volumio configuration"
+  cp -R "${PLTDIR}/${DEVICEBASE}/volumio" "${ROOTFSMNT}/"
 }
 
 write_device_bootloader() {
@@ -114,7 +119,7 @@ device_chroot_tweaks_pre() {
   
   # Do not use i2s for the time being (needs to be checked)
   cat <<-EOF >>/boot/dtb/amlogic/kvim1s.dtb.overlay.env
-fdt_overlays=spdifout uart_c renamesound
+fdt_overlays=spdifout uart_c renamesound panfrost
 EOF
 
   log "Fixing armv8 deprecated instruction emulation, allow dmesg"

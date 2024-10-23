@@ -22,32 +22,33 @@ source config/version
 
 if [ ! -e build/linux ]; then
    mkdir -p build/linux	
-   git clone http://github.com/khadas/linux -b khadas-vims-5.4.y build/linux --depth=1
+   git clone http://github.com/khadas/linux -b khadas-vims-5.15.y build/linux --depth=1
+   git clone http://github.com/khadas/common_drivers -b khadas-vims-5.15.y build/linux/common_drivers --depth=1
    cd build/linux
    echo "Backup original Khadas kernel config"
-   cp arch/arm64/configs/kvims_defconfig $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig-original 
+   cp common_drivers/arch/arm64/configs/kvims_defconfig $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig-original 
    echo "Replace by our own config" 
-   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig arch/arm64/configs/ 
+   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig common_drivers/arch/arm64/configs/ 
 else
    cd build/linux
    echo "Temporary restore backup khadas config"
-   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig-original arch/arm64/configs/kvims_defconfig
+   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig-original common_drivers/arch/arm64/configs/kvims_defconfig
    git pull
    echo "Replace by our own config"
-   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig arch/arm64/configs/  
-   ls -l arch/arm64/configs/
+   cp $PLATFORM/kernelnew/khadas/configs/${DEVICE}/kvims_defconfig common_drivers/arch/arm64/configs/  
+   ls -l common_drivers/arch/arm64/configs/
 fi
 
 
 cd $FENIX
-source env/setenv.sh -q -s  KHADAS_BOARD=VIM1S LINUX=5.4 UBOOT=2019.01 DISTRIBUTION=Ubuntu DISTRIB_RELEASE=jammy DISTRIB_RELEASE_VERSION=22.04 DISTRIB_TYPE=server DISTRIB_ARCH=arm64 INSTALL_TYPE=SD-USB COMPRESS_IMAGE=no
+source env/setenv.sh -q -s  KHADAS_BOARD=VIM1S LINUX=5.15 UBOOT=2019.01 DISTRIBUTION=Ubuntu DISTRIB_RELEASE=jammy DISTRIB_RELEASE_VERSION=22.04 DISTRIB_TYPE=server DISTRIB_ARCH=arm64 INSTALL_TYPE=SD-USB COMPRESS_IMAGE=no
 
 make kernel-clean
 make kernel-config
 
 echo "Copying kernel config to platform-khadas/kernelnew/khadas/configs/vim1s"
 make kernel-saveconfig
-cp build/linux/arch/arm64/configs/kvims_defconfig $PLATFORM/kernelnew/khadas/configs/${DEVICE}
+cp build/linux/common_drivers/arch/arm64/configs/kvims_defconfig $PLATFORM/kernelnew/khadas/configs/${DEVICE}
 
 make kernel-deb
 
