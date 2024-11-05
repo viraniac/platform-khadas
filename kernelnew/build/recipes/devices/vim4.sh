@@ -31,6 +31,7 @@ VOLVARIANT=no # Custom Volumio (Motivo/Primo etc)
 MYVOLUMIO=no
 VOLINITUPDATER=yes
 KIOSKMODE=yes
+KIOSKBROWSER=vivaldi
 
 ## Partition info
 BOOT_START=16
@@ -39,6 +40,7 @@ BOOT_TYPE=msdos          # msdos or gpt
 BOOT_USE_UUID=yes        # Add UUID to fstab
 IMAGE_END=3800
 INIT_TYPE="initv3"
+PLYMOUTH_THEME="volumio-player"
 
 # Modules that will be added to intramsfs
 MODULES=("overlay" "squashfs" "nls_cp437" "fuse")
@@ -52,6 +54,8 @@ write_device_files() {
   log "Running write_device_files" "ext"
 
   cp -RL "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
+  sed -i "s/hwdevice=/hwdevice=${DEVICE}/" "${ROOTFSMNT}"/boot/uEnv.txt
+
   cp -R "${PLTDIR}/${DEVICEBASE}/lib/modules" "${ROOTFSMNT}/lib"
 
   log "Adding broadcom wlan firmware for vims onboard wlan"
@@ -140,6 +144,20 @@ EOF
   ln -fs /lib/firmware/brcm/BCM4356A2.hcd /lib/firmware/brcm/BCM4354A2.hcd # AP6356S
 
   ln -s /lib/systemd/system/fan.service" "/etc/systemd/system/multi-user.target.wants/fan.service
+
+  if [ "${DEBUG_IMAGE}" == "yes" ]; then
+    log "Configuring DEBUG image" "info"
+    sed -i "s/quiet loglevel=0 splash/loglevel=8 nosplash break= use_kmsg=yes/" /boot/uEnv.txt
+  else
+    log "Configuring default kernel parameters" "info"
+    if [[ -n "${PLYMOUTH_THEME}" ]]; then
+      log "Adding splash kernel parameters" "info"
+      sed -i "s/loglevel=0 splash/loglevel=0 splash plymouth.ignore-serial-consoles initramfs.clear/" /boot/uEnv.txt
+    else
+      log "No splash screen, just quiet" "info"
+      sed -i "s/loglevel=0 splash/loglevel=0 nosplash/" /boot/uEnv.txt
+    fi
+  fi
 }
 
 # Will be run in chroot - Post initramfs
