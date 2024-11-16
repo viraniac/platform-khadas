@@ -19,7 +19,7 @@ DEVICENAME="Khadas VIM4"
 DEVICE="vim4"
 # This is useful for multiple devices sharing the same/similar kernel
 DEVICEFAMILY="khadas"
-DEVICEBASE="vim4"
+DEVICEBASE="vims-5.15"
 # tarball from DEVICEFAMILY repo to use
 #DEVICEREPO="https://github.com/volumio/platform-${DEVICEFAMILY}.git"
 DEVICEREPO="https://github.com/viraniac/platform-${DEVICEFAMILY}.git"
@@ -53,7 +53,12 @@ PACKAGES=("lirc" "fbset" )
 write_device_files() {
   log "Running write_device_files" "ext"
 
-  cp -RL "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
+  cp -LR "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
+  cp -L "${PLTDIR}/${DEVICEBASE}/boot/extlinux/extlinux.conf.${DEVICE}" "${ROOTFSMNT}"/boot/extlinux/extlinux.conf
+  cp -L "${PLTDIR}/${DEVICEBASE}/boot/uEnv.txt.${DEVICE}" "${ROOTFSMNT}"/boot/uEnv.txt
+  rm "${ROOTFSMNT}"/boot/extlinux/extlinux.conf.vim*
+  rm "${ROOTFSMNT}"/boot/uEnv.txt.vim*
+
   sed -i "s/hwdevice=/hwdevice=${DEVICE}/" "${ROOTFSMNT}"/boot/uEnv.txt
 
   cp -R "${PLTDIR}/${DEVICEBASE}/lib/modules" "${ROOTFSMNT}/lib"
@@ -62,7 +67,7 @@ write_device_files() {
   cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/wlan-firmware/brcm/" "${ROOTFSMNT}/lib/firmware"
 
   log "Adding Meson video firmware"
-  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/video-firmware/Amlogic/video" "${ROOTFSMNT}/lib/firmware/"
+  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/video-firmware/Amlogic/${DEVICE}"/* "${ROOTFSMNT}/lib/firmware/"
 
   log "Adding Wifi & Bluetooth firmware and helpers NOT COMPLETED, TBS"
   cp "${PLTDIR}/${DEVICEBASE}/hwpacks/bluez/hciattach-armhf" "${ROOTFSMNT}/usr/local/bin/hciattach"
@@ -73,28 +78,28 @@ write_device_files() {
   cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/bluetooth-khadas.service" "${ROOTFSMNT}/lib/systemd/system"
   cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/fan.service" "${ROOTFSMNT}/lib/systemd/system"
 
-  log "Load modules, specific for VIM4, to /etc/modules" 
-  cp "${PLTDIR}/${DEVICEBASE}/etc/modules" "${ROOTFSMNT}/etc"
-  cp -R "${PLTDIR}/${DEVICEBASE}/etc/modprobe.d" "${ROOTFSMNT}/etc/"
+  log "Load modules, specific for vims, to /etc/modules" 
+  cp -R "${PLTDIR}/${DEVICEBASE}/etc" "${ROOTFSMNT}/"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/initramfs-tools/modules.${DEVICE}" "${ROOTFSMNT}/etc/initramfs-tools/modules"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/modprobe.d.${DEVICE}"/* "${ROOTFSMNT}/etc/modprobe.d/"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/modules.${DEVICE}" "${ROOTFSMNT}/etc/modules"
+
+  rm "${ROOTFSMNT}"/etc/initramfs-tools/modules.vim*
+  rm -rf "${ROOTFSMNT}"/etc/modprobe.d.vim*
+  rm "${ROOTFSMNT}"/etc/modules.vim*
 
   log "Adding usr/local/bin & usr/bin files"
   cp -R "${PLTDIR}/${DEVICEBASE}/usr" "${ROOTFSMNT}"
 
-  log "Copying rc.local with all prepared ${DEVICE} tweaks"
-  cp "${PLTDIR}/${DEVICEBASE}/etc/rc.local" "${ROOTFSMNT}/etc"
-
-  log "Copying triggerhappy configuration"
-  cp -R "${PLTDIR}/${DEVICEBASE}/etc/triggerhappy" "${ROOTFSMNT}/etc"
-
-  log "Copying volumio alsa configuration"
+  log "Copying volumio configuration"
   cp -R "${PLTDIR}/${DEVICEBASE}/volumio" "${ROOTFSMNT}/"
 }
 
 write_device_bootloader() {
 
   log "Running write_device_bootloader" "ext"
-  dd if="${PLTDIR}/${DEVICE}/u-boot/${UBOOTBIN}" of="${LOOP_DEV}" bs=444 count=1 conv=fsync,notrunc >/dev/null 2>&1
-  dd if="${PLTDIR}/${DEVICE}/u-boot/${UBOOTBIN}" of="${LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync,notrunc >/dev/null 2>&1
+  dd if="${PLTDIR}/${DEVICEBASE}/u-boot/${DEVICE}/${UBOOTBIN}" of="${LOOP_DEV}" bs=444 count=1 conv=fsync,notrunc >/dev/null 2>&1
+  dd if="${PLTDIR}/${DEVICEBASE}/u-boot/${DEVICE}/${UBOOTBIN}" of="${LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync,notrunc >/dev/null 2>&1
 
 }
 

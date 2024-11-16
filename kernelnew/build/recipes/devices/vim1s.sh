@@ -19,10 +19,10 @@ DEVICENAME="Khadas VIM1S"
 DEVICE="vim1s"
 # This is useful for multiple devices sharing the same/similar kernel
 DEVICEFAMILY="khadas"
-DEVICEBASE="vim1s"
+DEVICEBASE="vims-5.15"
 # tarball from DEVICEFAMILY repo to use
 #DEVICEREPO="https://github.com/volumio/platform-${DEVICEFAMILY}.git"
-DEVICEREPO="https://github.com/gkkpch/platform-${DEVICEFAMILY}.git"
+DEVICEREPO="https://github.com/viraniac/platform-${DEVICEFAMILY}.git"
 
 UBOOTBIN="u-boot.bin.sd.bin.signed"
 ### What features do we want to target
@@ -52,7 +52,12 @@ PACKAGES=("lirc" "fbset" )
 write_device_files() {
   log "Running write_device_files" "ext"
 
-  cp -R "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
+  cp -LR "${PLTDIR}/${DEVICEBASE}/boot" "${ROOTFSMNT}"
+  cp -L "${PLTDIR}/${DEVICEBASE}/boot/extlinux/extlinux.conf.${DEVICE}" "${ROOTFSMNT}"/boot/extlinux/extlinux.conf
+  cp -L "${PLTDIR}/${DEVICEBASE}/boot/uEnv.txt.${DEVICE}" "${ROOTFSMNT}"/boot/uEnv.txt
+  rm "${ROOTFSMNT}"/boot/extlinux/extlinux.conf.vim*
+  rm "${ROOTFSMNT}"/boot/uEnv.txt.vim*
+
   sed -i "s/hwdevice=/hwdevice=${DEVICE}/" "${ROOTFSMNT}"/boot/uEnv.txt
 
   cp -R "${PLTDIR}/${DEVICEBASE}/lib/modules" "${ROOTFSMNT}/lib"
@@ -61,7 +66,7 @@ write_device_files() {
   cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/wlan-firmware/brcm/" "${ROOTFSMNT}/lib/firmware"
 
   log "Adding Meson video firmware"
-  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/video-firmware/Amlogic/video" "${ROOTFSMNT}/lib/firmware/"
+  cp -pR "${PLTDIR}/${DEVICEBASE}/hwpacks/video-firmware/Amlogic/${DEVICE}"/* "${ROOTFSMNT}/lib/firmware/"
 
   log "Adding Wifi & Bluetooth firmware and helpers NOT COMPLETED, TBS"
   cp "${PLTDIR}/${DEVICEBASE}/hwpacks/bluez/hciattach-armhf" "${ROOTFSMNT}/usr/local/bin/hciattach"
@@ -72,18 +77,18 @@ write_device_files() {
   cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/bluetooth-khadas.service" "${ROOTFSMNT}/lib/systemd/system"
   cp "${PLTDIR}/${DEVICEBASE}/lib/systemd/system/fan.service" "${ROOTFSMNT}/lib/systemd/system"
 
-  log "Load modules, specific for VIM1S, to /etc/modules" 
-  cp "${PLTDIR}/${DEVICEBASE}/etc/modules" "${ROOTFSMNT}/etc"
-  cp -R "${PLTDIR}/${DEVICEBASE}/etc/modprobe.d" "${ROOTFSMNT}/etc/"
+  log "Load modules, specific for vims, to /etc/modules" 
+  cp -R "${PLTDIR}/${DEVICEBASE}/etc" "${ROOTFSMNT}/"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/initramfs-tools/modules.${DEVICE}" "${ROOTFSMNT}/etc/initramfs-tools/modules"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/modprobe.d.${DEVICE}"/* "${ROOTFSMNT}/etc/modprobe.d/"
+  cp "${PLTDIR}/${DEVICEBASE}/etc/modules.${DEVICE}" "${ROOTFSMNT}/etc/modules"
+
+  rm "${ROOTFSMNT}"/etc/initramfs-tools/modules.vim*
+  rm -rf "${ROOTFSMNT}"/etc/modprobe.d.vim*
+  rm "${ROOTFSMNT}"/etc/modules.vim*
 
   log "Adding usr/local/bin & usr/bin files"
   cp -R "${PLTDIR}/${DEVICEBASE}/usr" "${ROOTFSMNT}"
-
-  log "Copying rc.local with all prepared ${DEVICE} tweaks"
-  cp "${PLTDIR}/${DEVICEBASE}/etc/rc.local" "${ROOTFSMNT}/etc"
-
-  log "Copying triggerhappy configuration"
-  cp -R "${PLTDIR}/${DEVICEBASE}/etc/triggerhappy" "${ROOTFSMNT}/etc"
 
   log "Copying volumio configuration"
   cp -R "${PLTDIR}/${DEVICEBASE}/volumio" "${ROOTFSMNT}/"
@@ -92,8 +97,8 @@ write_device_files() {
 write_device_bootloader() {
 
   log "Running write_device_bootloader" "ext"
-  dd if="${PLTDIR}/${DEVICE}/u-boot/${UBOOTBIN}" of="${LOOP_DEV}" bs=444 count=1 conv=fsync,notrunc >/dev/null 2>&1
-  dd if="${PLTDIR}/${DEVICE}/u-boot/${UBOOTBIN}" of="${LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync,notrunc >/dev/null 2>&1
+  dd if="${PLTDIR}/${DEVICEBASE}/u-boot/${DEVICE}/${UBOOTBIN}" of="${LOOP_DEV}" bs=444 count=1 conv=fsync,notrunc >/dev/null 2>&1
+  dd if="${PLTDIR}/${DEVICEBASE}/u-boot/${DEVICE}/${UBOOTBIN}" of="${LOOP_DEV}" bs=512 skip=1 seek=1 conv=fsync,notrunc >/dev/null 2>&1
 
 }
 
@@ -140,6 +145,8 @@ EOF
 # Patches used by hciattach
   ln -fs /lib/firmware/brcm/BCM43438A1.hcd /lib/firmware/brcm/BCM43430A1.hcd # AP6212
   ln -fs /lib/firmware/brcm/BCM4356A2.hcd /lib/firmware/brcm/BCM4354A2.hcd # AP6356S
+
+  ln -s /lib/systemd/system/fan.service" "/etc/systemd/system/multi-user.target.wants/fan.service
 
   if [ "${DEBUG_IMAGE}" == "yes" ]; then
     log "Configuring DEBUG image" "info"
