@@ -1,0 +1,42 @@
+diff --git a/drivers/net/wireless/bcmdhd/Makefile b/drivers/net/wireless/bcmdhd/Makefile
+index 3345cedf5f92..4b311d0a7c1b 100755
+--- a/drivers/net/wireless/bcmdhd/Makefile
++++ b/drivers/net/wireless/bcmdhd/Makefile
+@@ -106,13 +106,13 @@ ifneq ($(CONFIG_CFG80211),)
+ 	DHDCFLAGS += -DSUPPORT_RSSI_SUM_REPORT
+ 	DHDCFLAGS += -DWLFBT -DWL_GCMP_SUPPORT -DWL_OWE
+ 	DHDCFLAGS += -DROAM_CHANNEL_CACHE -DDHD_LOSSLESS_ROAMING
+-#	DHDCFLAGS += -DWL_CFGVENDOR_SEND_HANG_EVENT
++	DHDCFLAGS += -DWL_CFGVENDOR_SEND_HANG_EVENT
+ 	DHDCFLAGS += -DGTK_OFFLOAD_SUPPORT
+ 	DHDCFLAGS += -DWL_STATIC_IF #-DDHD_MAX_STATIC_IFS=2
+ 	DHDCFLAGS += -DWL_CLIENT_SAE
+ 	DHDCFLAGS += -DCONNECT_INFO_WAR -DWL_ROAM_WAR
+ 	DHDCFLAGS += -DVNDR_IE_WAR
+-	DHDCFLAGS += -DRESTART_AP_WAR -DRXF0OVFL_REINIT_WAR
++#	DHDCFLAGS += -DRESTART_AP_WAR -DRXF0OVFL_REINIT_WAR
+ endif
+ 
+ #BCMDHD_SDIO
+diff --git a/drivers/net/wireless/bcmdhd/wl_cfg80211.c b/drivers/net/wireless/bcmdhd/wl_cfg80211.c
+index bbf8f095c2c6..725404df764d 100755
+--- a/drivers/net/wireless/bcmdhd/wl_cfg80211.c
++++ b/drivers/net/wireless/bcmdhd/wl_cfg80211.c
+@@ -7281,6 +7281,7 @@ wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 	s32 bssidx;
+ #ifdef BCMDONGLEHOST
+ 	dhd_pub_t *dhdp = (dhd_pub_t *)(cfg->pub);
++	char *dongle_state[2] = { "DONGLE_STATE=RESET", NULL };
+ #endif /* BCMDONGLEHOST */
+ 
+ #if defined (BCMDONGLEHOST)
+@@ -7288,6 +7289,9 @@ wl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *dev,
+ 		/* If we are hit with bus error, return success so that
+ 		 * don't repeatedly call del station till we recover.
+ 		 */
++		if (dhdp->dongle_reset) {
++			kobject_uevent_env(&dev->dev.kobj, KOBJ_CHANGE, dongle_state);
++		}
+ 		return 0;
+ 	}
+ #endif /* BCMDONGLEHOST */
