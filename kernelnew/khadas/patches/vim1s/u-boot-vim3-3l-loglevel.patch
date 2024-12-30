@@ -1,0 +1,32 @@
+diff --git a/board/khadas/configs/kvim3.h b/board/khadas/configs/kvim3.h
+index edb1136c722..72437e08734 100644
+--- a/board/khadas/configs/kvim3.h
++++ b/board/khadas/configs/kvim3.h
+@@ -213,9 +213,9 @@
+ 		"tftp_initrd_path=boot/initrd.img \0" \
+ 		"nfsroot_path= \0" \
+ 		"initargs="\
+-			"rootflags=data=writeback rw rootfstype=ext4 loglevel=4 " \
++			"rootflags=data=writeback rw rootfstype=ext4 " \
+ 			"no_console_suspend " \
+-			"earlycon=aml-uart,0xff803000 ramoops.pstore_en=1 " \
++			"earlycon=aml_uart,0xff803000 ramoops.pstore_en=1 " \
+ 			"ramoops.record_size=0x8000 ramoops.console_size=0x4000 "\
+ 			"scsi_mod.scan=async xhci_hcd.quirks=0x800000 gamma=0 "\
+ 			"\0"\
+diff --git a/board/khadas/configs/kvim3l.h b/board/khadas/configs/kvim3l.h
+index 84895574571..0141ccf6f80 100644
+--- a/board/khadas/configs/kvim3l.h
++++ b/board/khadas/configs/kvim3l.h
+@@ -228,9 +228,9 @@
+ 	"tftp_initrd_path=boot/initrd.img \0" \
+ 	"nfsroot_path= \0" \
+ 	"initargs="\
+-		"rootflags=data=writeback rw rootfstype=ext4 loglevel=4 "\
++		"rootflags=data=writeback rw rootfstype=ext4 "\
+ 		"no_console_suspend "\
+-		"earlycon=aml-uart,0xff803000 ramoops.pstore_en=1 "\
++		"earlycon=aml_uart,0xff803000 ramoops.pstore_en=1 "\
+ 		"ramoops.record_size=0x8000 ramoops.console_size=0x4000 "\
+ 		"scsi_mod.scan=async xhci_hcd.quirks=0x800000 gamma=0 "\
+ 		"\0"\
