@@ -28,7 +28,7 @@ UBOOTBIN="u-boot.bin.sd.bin"
 ### What features do we want to target
 # TODO: Not fully implement
 VOLVARIANT=no # Custom Volumio (Motivo/Primo etc)
-MYVOLUMIO=no
+MYVOLUMIO=yes
 VOLINITUPDATER=yes
 KIOSKMODE=yes
 KIOSKBROWSER=vivaldi
