@@ -173,15 +173,7 @@ device_chroot_tweaks_post() {
 
 # Will be called by the image builder post the chroot, before finalisation
 device_image_tweaks_post() {
-  log "Running device_image_tweaks_post" "ext"
-  log "Creating uInitrd from 'volumio.initrd'" "info"
-  if [[ -f "${ROOTFSMNT}"/boot/volumio.initrd ]]; then
-    mkimage -v -A "${UINITRD_ARCH}" -O linux -T ramdisk -C none -a 0 -e 0 -n uInitrd -d "${ROOTFSMNT}"/boot/volumio.initrd "${ROOTFSMNT}"/boot/uInitrd
-    #rm "${ROOTFSMNT}"/boot/volumio.initrd
-  fi
-  if [[ -f "${ROOTFSMNT}"/boot/boot.cmd ]]; then
-    log "Creating boot.scr"
-    mkimage -A arm -T script -C none -d "${ROOTFSMNT}"/boot/boot.cmd "${ROOTFSMNT}"/boot/boot.scr
-  fi
+  # log "Running device_image_tweaks_post" "ext"
+  :
 }
 
